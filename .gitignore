@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# Dependency directories
+bower_components/
+jspm_packages/
+
+# Compiled files
+*.class
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+
+# Webpack output
+webpack/
+
+# Manifest files
+manifest/
+.env
+*.manifest
+app-build-manifest.json
+.next/
