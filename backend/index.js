@@ -3,12 +3,20 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import userRoute from './routes/user.route.js'
+import cors from 'cors'
 
 dotenv.config();
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Replace with your frontend URL
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+}));
+
 
 app.use('/api', userRoute);
 

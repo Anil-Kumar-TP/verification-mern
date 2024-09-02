@@ -1,6 +1,7 @@
 'use client'
 import React, { useCallback, useState } from 'react'
 import { debounce } from 'lodash';
+import axios from 'axios';
 
 // Custom validator functions
 const Validator = {
@@ -70,6 +71,18 @@ export default function Register() {
   const [pincode, setPincode] = useState('');
   const [pincodeError, setPincodeError] = useState('');
 
+   const [otp, setOtp] = useState('');
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+   const [otpError, setOtpError] = useState(''); 
+
+  
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const [showValidity, setShowValidity] = useState(false);
+  
+
   const validateName = (value) => {
     if (value === '') return '';
     const regex = /^[A-Za-z\s]+$/;
@@ -115,10 +128,10 @@ export default function Register() {
   };
 
   const validateBankAccount = (value) => {
-    if (value === '') return '';
-    const regex = /^[0-9]{9,18}$/;
-    return regex.test(value) ? 'Valid bank account number' : "Bank account number must be between 9 and 18 digits.";
-  };
+  if (value === '') return '';
+  const regex = /^[0-9]{9,18}$/;
+  return regex.test(value) ? 'Valid bank account number' : "Bank account number must be between 9 and 18 digits.";
+};
 
   const validatePan = (value) => {
     if (value === '') return '';
@@ -183,12 +196,26 @@ export default function Register() {
     if (value.length > 10) value = value.slice(0, 10);
     handleChange({ target: { value } }, validatePan, setPan, setPanError);
   };
-  const handleBankAccountChange = (e) => {
+ const handleBankAccountChange = (e) => {
   let value = e.target.value.replace(/\D/g, ''); // Remove all non-numeric characters
   if (value.length > 18) value = value.slice(0, 18); // Ensure max length of 18 digits
-  handleChange({ target: { value } }, validateBankAccount, setBankAccount, setBankAccountError);
+
+  const validationError = validateBankAccount(value);
+  setBankAccount(value);
+  
+  setBankAccountError(validationError);
+
+  // Check if the bank account is valid and set showValidity correctly
+  if (validationError === 'Valid bank account number') {
+    setShowValidity(true);
+  } else {
+    setShowValidity(false);
+  }
 };
 
+
+
+  
   const handleGstChange = (e) => {
     let value = e.target.value.toUpperCase();
     if (value.length > 15) value = value.slice(0, 15);
@@ -200,10 +227,120 @@ export default function Register() {
     handleChange({ target: { value } }, validatePincode, setPincode, setPincodeError);
   };
 
+
+  const handleVerifyMobile = async (e) => {
+    e.preventDefault();
+  console.log('handleVerifyMobile called'); // Check if this logs when the button is clicked
+  
+  // Clear previous messages
+  setErrorMessage('');
+  setSuccessMessage('');
+  
+  // Validate mobile number
+  if (!mobile.trim()) {
+    setErrorMessage('Please enter a mobile number.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('http://localhost:5000/api/send-mobile-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mobile }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // If needed, use the response data
+    // const data = await response.json();
+    // Process the data if required
+    // console.log(data);
+
+    setSuccessMessage('OTP sent successfully. Please check your mobile.');
+    setShowOtpInput(true); // Show OTP input field
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    setErrorMessage('Failed to send OTP. Please try again.');
+  }
+};
+
+
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+  console.log('handleVerifyOtp called'); // Check if this logs when the button is clicked
+
+  // Clear previous OTP error message
+  setOtpError('');
+  setSuccessMessage('');
+
+  // Validate OTP input
+  if (!otp.trim()) {
+    setOtpError('Please enter the OTP.');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5000/api/verify-mobile-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mobile, otp }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log("verified");
+    setIsVerified(true); // Set the verification state to true
+    setSuccessMessage('OTP verified successfully.');
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    setOtpError('Invalid or expired OTP. Please try again.');
+  }
+};
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Check if all fields are valid
+    if (Object.values({ nameError, emailError, passwordError, mobileError, dobError, bankAccountError, aadhaarError, panError, gstError, pincodeError }).some(error => error)) {
+    setErrorMessage('Please correct the errors before submitting.');
+    return;
+  }
+
+  // Send registration request
+  try {
+    const response = await fetch('http://localhost:5000/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },  
+      body: JSON.stringify({ name, email, password, mobile, dob, adhaar: aadhaar, pan, bank: bankAccount, gst, pin: pincode }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    setSuccessMessage('Registration successful!');
+  } catch (error) {
+    console.error('Error registering user:', error);
+    setErrorMessage('Failed to register. Please try again.');
+  }
+};
+
+
   return (
     <>
       <h1 className='text-2xl text-center font-bold mt-2'>Registration Page</h1>
-      <form className='flex flex-col gap-2 max-w-[400px] mx-auto my-10'>
+      <form className='flex flex-col gap-2 max-w-[400px] mx-auto my-10' onSubmit={handleSubmit}>
         <InputField
           type="text"
           placeholder="Your Name..."
@@ -229,7 +366,7 @@ export default function Register() {
           error={passwordError}
         />
         <InputField
-          type="tel"
+          type="text"
           placeholder="Your Mobile no..."
           id="mobile"
           value={mobile}
@@ -237,6 +374,7 @@ export default function Register() {
           error={mobileError}
           showValidity
         />
+        
         <InputField
           type="text"
           placeholder="DD-MM-YYYY"
@@ -271,8 +409,12 @@ export default function Register() {
           id="bank"
           value={bankAccount}
           onChange={handleBankAccountChange}
-          error={bankAccountError}
+          // error={bankAccountError}
         />
+        <p style={{ color: showValidity ? 'green' : 'red' }} className="text-xs mt-1">
+        {bankAccountError}
+       </p>
+
         <InputField
           type="text"
           placeholder="Your GST number..."
@@ -293,6 +435,20 @@ export default function Register() {
           showValidity
           maxLength={6}
         />
+
+        <button type='button' onClick={handleVerifyMobile} className='bg-green-400 text-white p-3 rounded-md'>Verify Mobile</button>
+
+        {showOtpInput && (
+        <div>
+          <InputField value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" error={otpError} />
+          <button type='button' onClick={handleVerifyOtp} className='bg-red-400 text-white p-3 rounded-md'>Verify OTP</button>
+        </div>
+      )}
+
+        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+        {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+        
+        {isVerified && <button type="submit" className='bg-blue-500 text-white p-4 rounded-md' onClick={handleSubmit}>Register</button>}
       </form>
     </>
   )

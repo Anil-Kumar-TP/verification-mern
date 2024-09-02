@@ -1,6 +1,5 @@
 import User from '../models/user.model.js';
 import bcrypt from 'bcrypt';
-import nodemailer from 'nodemailer';
 import twilio from 'twilio';
 import dotenv from 'dotenv';
 
@@ -50,7 +49,7 @@ export const sendMobileOtp = async (req, res) => {
       await twilioClient.messages.create({
         body: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
         from: twilioPhoneNumber,
-        to: mobile, // Use the mobile number from the request
+        to: "+917902259683", // Use the mobile number from the request
       });
 
       res.status(200).json({ message: 'OTP sent to mobile' });
