@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "format-utils": "^0.0.9",
     "lodash": "^4.17.21",
     "next": "14.2.7",
     "react": "^18",
