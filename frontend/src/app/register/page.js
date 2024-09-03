@@ -1,6 +1,7 @@
 'use client'
 import React, { useCallback, useState } from 'react'
 import { debounce } from 'lodash';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 // Custom validator functions
@@ -82,6 +83,7 @@ export default function Register() {
 
   const [showValidity, setShowValidity] = useState(false);
   
+  const router = useRouter();
 
   const validateName = (value) => {
     if (value === '') return '';
@@ -230,7 +232,6 @@ export default function Register() {
 
   const handleVerifyMobile = async (e) => {
     e.preventDefault();
-  console.log('handleVerifyMobile called'); // Check if this logs when the button is clicked
   
   // Clear previous messages
   setErrorMessage('');
@@ -272,7 +273,6 @@ export default function Register() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-  console.log('handleVerifyOtp called'); // Check if this logs when the button is clicked
 
   // Clear previous OTP error message
   setOtpError('');
@@ -310,10 +310,10 @@ export default function Register() {
   e.preventDefault();
 
   // Check if all fields are valid
-    if (Object.values({ nameError, emailError, passwordError, mobileError, dobError, bankAccountError, aadhaarError, panError, gstError, pincodeError }).some(error => error)) {
-    setErrorMessage('Please correct the errors before submitting.');
-    return;
-  }
+   if (!name || !email || !password || !mobile || !dob || !bankAccount || !aadhaar || !pan || !gst || !pincode) {
+  setErrorMessage('Please fill in all the required fields before submitting.');
+  return;
+}
 
   // Send registration request
   try {
@@ -330,6 +330,7 @@ export default function Register() {
     }
 
     setSuccessMessage('Registration successful!');
+    router.push('/profile');
   } catch (error) {
     console.error('Error registering user:', error);
     setErrorMessage('Failed to register. Please try again.');
@@ -448,7 +449,7 @@ export default function Register() {
         {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
         
-        {isVerified && <button type="submit" className='bg-blue-500 text-white p-4 rounded-md' onClick={handleSubmit}>Register</button>}
+        {isVerified && <button type="submit" className='bg-blue-500 text-white p-4 rounded-md'>Register</button>}
       </form>
     </>
   )

@@ -26,11 +26,15 @@ try {
 
 export const sendMobileOtp = async (req, res) => {
   try {
-    const { mobile } = req.body;
+    let { mobile } = req.body;
 
     if (!mobile) {
       return res.status(400).json({ message: 'Mobile number is required' });
     }
+
+    //  if (!mobile.startsWith('+')) {
+    //   mobile = `+91${mobile}`; // Add the +91 country code for India if it's not included
+    // }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
@@ -115,5 +119,20 @@ const user = await User.findOne({ mobile });
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error registering user', error: error.message });
+  }
+};
+
+
+export const getUser = async (req, res) => {
+  try {
+    const user = await User.findOne();
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user', error: error.message });
   }
 };
